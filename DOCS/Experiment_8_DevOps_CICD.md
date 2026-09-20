@@ -296,12 +296,210 @@ GitHub Actions Triggered
 
 ---
 
+## Codebase CI Workflow (Existing Code)
+
+A second workflow was created to validate the existing codebase, including the version field change in the Backend health endpoint.
+
+### Step 9: Create Codebase CI Workflow
+
+**File: `.github/workflows/codebase-ci.yml`**
+
+```yaml
+name: Codebase CI
+
+on:
+  push:
+    branches: [ "main", "feat/ci-cd-pipeline" ]
+
+jobs:
+  frontend-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install Frontend dependencies
+        working-directory: Frontend
+        run: npm ci
+
+      - name: Run Frontend lint
+        working-directory: Frontend
+        run: npm run lint
+        continue-on-error: true
+
+      - name: Build Frontend
+        working-directory: Frontend
+        run: npm run build
+
+  backend-health-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install Backend dependencies
+        working-directory: Backend
+        run: npm ci
+
+      - name: Start Backend server
+        working-directory: Backend
+        run: node index.js &
+        env:
+          PORT: 5000
+
+      - name: Wait for server to start
+        run: sleep 5
+
+      - name: Verify health endpoint returns version field
+        run: |
+          echo "Checking health endpoint..."
+          RESPONSE=$(curl -s http://localhost:5000/api/health)
+          echo "Response: $RESPONSE"
+          echo "$RESPONSE" | grep -q '"version"'
+          echo "version field exists"
+          echo "$RESPONSE" | grep -q '"1.0.4"'
+          echo "version is 1.0.4"
+          echo "$RESPONSE" | grep -q '"status":"healthy"'
+          echo "status is healthy"
+          echo "All health checks passed!"
+
+      - name: Run Backend health test
+        working-directory: Backend
+        run: node --experimental-vm-modules node_modules/jest/bin/jest.js tests/health.test.js --forceExit
+        env:
+          API_URL: http://localhost:5000/api
+
+      - name: Stop Backend server
+        if: always()
+        run: kill $(lsof -t -i:5000) 2>/dev/null || true
+```
+
+---
+
+### Step 10: Create Backend Health Test
+
+**File: `Backend/tests/health.test.js`**
+
+```javascript
+/**
+ * Health Endpoint Version Check Test
+ * Tests that the /api/health endpoint returns the correct version field
+ */
+
+import axios from 'axios';
+import { describe, test, expect } from '@jest/globals';
+
+const API_URL = process.env.API_URL || 'http://localhost:5000/api';
+const apiClient = axios.create({ baseURL: API_URL, validateStatus: () => true });
+
+describe('Health Endpoint Version Check', () => {
+
+  test('GET /api/health should return version 1.0.4', async () => {
+    const res = await apiClient.get('/health');
+    expect(res.status).toBe(200);
+    expect(res.data.success).toBe(true);
+    expect(res.data.version).toBe('1.0.4');
+  });
+
+  test('GET /api/health should return all required fields', async () => {
+    const res = await apiClient.get('/health');
+    expect(res.status).toBe(200);
+    expect(res.data).toHaveProperty('status', 'healthy');
+    expect(res.data).toHaveProperty('version');
+    expect(res.data).toHaveProperty('uptime');
+    expect(res.data).toHaveProperty('timestamp');
+  });
+
+  test('GET /api/health should return healthy status', async () => {
+    const res = await apiClient.get('/health');
+    expect(res.status).toBe(200);
+    expect(res.data.status).toBe('healthy');
+    expect(typeof res.data.uptime).toBe('number');
+  });
+});
+```
+
+---
+
+### Codebase CI Pipeline Architecture
+
+```
+GitHub Actions Triggered
+    │
+    ├─── Job 1: frontend-build ──────────────────────┐
+    │         │                                      │
+    │         ▼                                      │
+    │    Checkout Code                               │
+    │         │                                      │
+    │         ▼                                      │
+    │    Setup Node.js 18                            │
+    │         │                                      │
+    │         ▼                                      │
+    │    npm ci (Frontend)                           │
+    │         │                                      │
+    │         ▼                                      │
+    │    Run Frontend Lint                           │
+    │         │                                      │
+    │         ▼                                      │
+    │    Build Frontend (vite build)                 │
+    │         │                                      │
+    │         ▼                                      │
+    │    Pipeline Successful ✅                       │
+    │                                                │
+    ├─── Job 2: backend-health-test ─────────────────┘
+              |
+              v
+         Checkout Code
+              |
+              v
+         Setup Node.js 18
+              |
+              v
+         npm ci (Backend)
+              |
+              v
+         Start Backend Server
+              |
+              v
+         curl /api/health
+              |
+              v
+         Verify version: "1.0.4"
+              |
+              v
+         Jest Health Test
+              |
+              v
+         Pipeline Successful ✅
+```
+
+---
+
 ## Conclusion
 
-Successfully implemented a basic DevOps CI/CD pipeline using GitHub Actions. The pipeline automatically:
+Successfully implemented a basic DevOps CI/CD pipeline using GitHub Actions with two workflows:
+
+**Workflow 1: Python CI/CD (`python-ci.yml`)**
 1. Runs Python pytest tests on the demo application
 2. Executes the Python application
 3. Lints the existing React Frontend codebase
+
+**Workflow 2: Codebase CI (`codebase-ci.yml`)**
+1. Builds the React Frontend (validates compilation)
+2. Starts the Backend server and verifies the health endpoint
+3. Validates the `version: "1.0.4"` field via curl and Jest tests
 
 This demonstrates how GitHub Actions enables automated testing and validation on every code push, ensuring code quality and catching bugs early in the development cycle.
 
