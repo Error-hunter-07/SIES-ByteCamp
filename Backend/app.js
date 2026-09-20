@@ -56,6 +56,7 @@ app.get("/api/health", (_req, res) => {
   res.status(200).json({
     success: true,
     status: "healthy",
+    version: "1.0.4",
     uptime: process.uptime(),
     timestamp: new Date().toISOString(),
   });
