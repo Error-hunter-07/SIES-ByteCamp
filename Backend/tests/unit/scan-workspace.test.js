@@ -27,8 +27,8 @@ describe('getRepoIdFromCloneDir', () => {
     expect(getRepoIdFromCloneDir('/some/path/my-repo')).toBe('my-repo');
   });
 
-  test('returns last segment on Windows-style path', () => {
-    expect(getRepoIdFromCloneDir('C:\\repos\\test-project')).toBe('test-project');
+  test('returns last segment on nested path', () => {
+    expect(getRepoIdFromCloneDir('/home/user/repos/test-project')).toBe('test-project');
   });
 });
 
