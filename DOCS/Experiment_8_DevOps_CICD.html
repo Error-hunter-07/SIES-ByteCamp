@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Experiment 8 - DevOps CI/CD Pipeline</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.8;
+            color: #333;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        .header {
+            background: linear-gradient(135deg, #1a73e8, #0d47a1);
+            color: white;
+            padding: 40px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+        .card h2 {
+            color: #1a73e8;
+            font-size: 22px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e8eaed;
+        }
+        .card h3 {
+            color: #333;
+            font-size: 18px;
+            margin: 20px 0 12px;
+        }
+        .card p {
+            margin-bottom: 12px;
+            color: #555;
+        }
+        .card ul, .card ol {
+            margin: 12px 0 12px 25px;
+            color: #555;
+        }
+        .card li {
+            margin-bottom: 6px;
+        }
+        pre {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 13px;
+            line-height: 1.6;
+            margin: 15px 0;
+        }
+        code {
+            background: #e8eaed;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #d93025;
+        }
+        pre code {
+            background: none;
+            padding: 0;
+            color: inherit;
+        }
+        .step {
+            background: #f8f9fa;
+            border-left: 4px solid #1a73e8;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .step-number {
+            display: inline-block;
+            background: #1a73e8;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .screenshot-placeholder {
+            background: #e8eaed;
+            border: 2px dashed #9aa0a6;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            margin: 15px 0;
+            color: #5f6368;
+            font-style: italic;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            border: 1px solid #dadce0;
+            padding: 12px 15px;
+            text-align: left;
+        }
+        th {
+            background: #1a73e8;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+        .architecture {
+            background: #1e1e1e;
+            color: #4ec9b0;
+            padding: 25px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            overflow-x: auto;
+            white-space: pre;
+        }
+        .badge {
+            display: inline-block;
+            background: #34a853;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .highlight {
+            background: #fff3cd;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .diff-add {
+            background: #d4edda;
+            color: #155724;
+            padding: 2px 4px;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #9aa0a6;
+            font-size: 14px;
+        }
+        @media print {
+            body {
+                background: white;
+            }
+            .card {
+                box-shadow: none;
+                border: 1px solid #ddd;
+                break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>Experiment 8</h1>
+            <p>Implement Basic DevOps Pipeline: GitHub Actions for CI/CD</p>
+            <p style="margin-top: 10px;">SIES ByteCamp 2026 | GenAI Track GA1</p>
+        </div>
+
+        <!-- Aim -->
+        <div class="card">
+            <h2>Aim</h2>
+            <p>Implement a basic DevOps pipeline using GitHub Actions for CI/CD for a simple Python application integrated with an existing JavaScript/Node.js codebase.</p>
+        </div>
+
+        <!-- Theory -->
+        <div class="card">
+            <h2>Theory</h2>
+
+            <h3>Introduction to DevOps</h3>
+            <p>DevOps is a set of practices that combines software development (Dev) and IT operations (Ops) to shorten the software development lifecycle and provide continuous delivery with high software quality.</p>
+            <p>DevOps encourages automation, collaboration, monitoring, and continuous improvement. It helps organizations deliver applications faster and more reliably.</p>
+
+            <p><strong>Key goals of DevOps include:</strong></p>
+            <ul>
+                <li>Faster software delivery</li>
+                <li>Improved collaboration between teams</li>
+                <li>Continuous monitoring and feedback</li>
+                <li>Automated testing and deployment</li>
+            </ul>
+
+            <h3>Concept of CI/CD</h3>
+            <p><strong>Continuous Integration (CI)</strong> is the practice of automatically integrating code changes from multiple developers into a shared repository. Each integration triggers automated builds and tests.</p>
+            <p><strong>Continuous Deployment (CD)</strong> ensures that validated code changes are automatically released to production or staging environments.</p>
+
+            <p><strong>Benefits of CI/CD:</strong></p>
+            <ul>
+                <li>Faster development cycles</li>
+                <li>Reduced manual errors</li>
+                <li>Early detection of bugs</li>
+                <li>Reliable and automated deployment</li>
+            </ul>
+        </div>
+
+        <!-- Implementation -->
+        <div class="card">
+            <h2>Implementation</h2>
+
+            <!-- Step 1 -->
+            <div class="step">
+                <span class="step-number">1</span>
+                <strong>Create a Separate Branch</strong>
+                <p>To avoid tampering with the main branch, a feature branch <code>feat/ci-cd-pipeline</code> was created:</p>
+                <pre><code>git checkout -b feat/ci-cd-pipeline</code></pre>
+                <div class="screenshot-placeholder">
+                    📷 Screenshot: branch-created.png<br>
+                    Terminal showing new branch created
+                </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="step">
+                <span class="step-number">2</span>
+                <strong>Create Python Application (app.py)</strong>
+                <p>A simple Python application with an <code>add</code> function was created at the repository root:</p>
+                <p><strong>File: <code>app.py</code></strong></p>
+                <pre><code>def add(a, b):
+    return a + b
+
+print("Hello DevOps")
+print("2 + 3 =", add(2, 3))</code></pre>
+                <div class="screenshot-placeholder">
+                    📷 Screenshot: app-py-code.png<br>
+                    Code content of app.py
+                </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="step">
+                <span class="step-number">3</span>
+                <strong>Create Test File (test_app.py)</strong>
+                <p>A pytest test file was created to test the <code>add</code> function:</p>
+                <p><strong>File: <code>test_app.py</code></strong></p>
+                <pre><code>from app import add
+
+def test_add():
+    assert add(2, 3) == 5</code></pre>
+                <div class="screenshot-placeholder">
+                    📷 Screenshot: test-app-py-code.png<br>
+                    Code content of test_app.py
+                </div>
+            </div>
+
+            <!-- Step 4 -->
+            <div class="step">
+                <span class="step-number">4</span>
+                <strong>Create GitHub Actions Workflow</strong>
+                <p>A CI/CD workflow was created at <code>.github/workflows/python-ci.yml</code>:</p>
+                <p><strong>File: <code>.github/workflows/python-ci.yml</code></strong></p>
+                <pre><code>name: Python CI/CD
+
+on:
+  push:
+    branches: [ "main", "feat/ci-cd-pipeline" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install pytest
+        run: pip install pytest
+
+      - name: Run tests
+        run: pytest
+
+      - name: Run application
+        run: python app.py
+
+  frontend-lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install Frontend dependencies
+        working-directory: Frontend
+        run: npm install
+
+      - name: Run Frontend lint
+        working-directory: Frontend
+        run: npm run lint
+        continue-on-error: true</code></pre>
+                <div class="screenshot-placeholder">
+                    📷 Screenshot: workflow-yaml-code.png<br>
+                    Code content of python-ci.yml
+                </div>
+            </div>
+
+            <!-- Step 5 -->
+            <div class="step">
+                <span class="step-number">5</span>
+                <strong>Small Change in Existing Codebase</strong>
+                <p>A <code>version</code> field was added to the Backend health check endpoint to demonstrate CI catching a real code modification.</p>
+                <p><strong>File: <code>Backend/app.js</code> (line 55-62)</strong></p>
+                <pre><code> app.get("/api/health", (_req, res) => {
+   res.status(200).json({
+     success: true,
+     status: "healthy",
+<span class="diff-add">+    version: "1.0.4",</span>
+     uptime: process.uptime(),
+     timestamp: new Date().toISOString(),
+   });
+ });</code></pre>
+                <div class="screenshot-placeholder">
+                    📷 Screenshot: health-endpoint-change.png<br>
+                    Diff showing the version field added
+                </div>
+            </div>
+
+            <!-- Step 6 -->
+            <div class="step">
+                <span class="step-number">6</span>
+                <strong>Commit and Push</strong>
+                <p>All changes were staged, committed, and pushed to the feature branch:</p>
+                <pre><code>git add .
+git commit -m "feat: add Python CI/CD pipeline and health endpoint versioning"
+git push -u origin feat/ci-cd-pipeline</code></pre>
+                <div class="screenshot-placeholder">
+                    📷 Screenshot: git-push.png<br>
+                    Terminal showing successful push
+                </div>
+            </div>
+
+            <!-- Step 7 -->
+            <div class="step">
+                <span class="step-number">7</span>
+                <strong>Verify Pipeline on GitHub</strong>
+                <p>After pushing, GitHub Actions automatically triggered the workflow. The pipeline can be verified by navigating to:</p>
+                <p><strong>Repository &rarr; Actions tab &rarr; Python CI/CD workflow</strong></p>
+                <div class="screenshot-placeholder">
+                    📷 Screenshot: github-actions-tab.png<br>
+                    GitHub Actions tab showing workflow triggered
+                </div>
+            </div>
+
+            <!-- Step 8 -->
+            <div class="step">
+                <span class="step-number">8</span>
+                <strong>Check Pipeline Logs</strong>
+                <p>Both jobs completed successfully:</p>
+                <div class="screenshot-placeholder">
+                    📷 Screenshot: pipeline-success.png<br>
+                    Green checkmarks showing both jobs passed
+                </div>
+                <p><strong>Python Test Job Logs:</strong></p>
+                <div class="screenshot-placeholder">
+                    📷 Screenshot: python-test-log.png<br>
+                    Expanded Python test job logs
+                </div>
+                <p><strong>Frontend Lint Job Logs:</strong></p>
+                <div class="screenshot-placeholder">
+                    📷 Screenshot: frontend-lint-log.png<br>
+                    Expanded Frontend lint job logs
+                </div>
+            </div>
+        </div>
+
+        <!-- Pipeline Architecture -->
+        <div class="card">
+            <h2>Pipeline Architecture</h2>
+            <div class="architecture">Developer
+    |
+    | Push Code
+    v
+GitHub Repository
+    |
+    v
+GitHub Actions Triggered
+    |
+    +--- Job 1: build-and-test -------------------------+
+    |         |                                         |
+    |         v                                         |
+    |    Checkout Code                                  |
+    |         |                                         |
+    |         v                                         |
+    |    Setup Python 3.11                              |
+    |         |                                         |
+    |         v                                         |
+    |    Install pytest                                 |
+    |         |                                         |
+    |         v                                         |
+    |    Run Tests (pytest)                             |
+    |         |                                         |
+    |         +-- Test Failed --> Pipeline Failed [X]    |
+    |         |                                         |
+    |         v                                         |
+    |    Test Passed                                    |
+    |         |                                         |
+    |         v                                         |
+    |    Run Application (python app.py)                |
+    |         |                                         |
+    |         v                                         |
+    |    Pipeline Successful [OK]                        |
+    |                                                   |
+    +--- Job 2: frontend-lint ---------------------------+
+              |
+              v
+         Checkout Code
+              |
+              v
+         Setup Node.js 18
+              |
+              v
+         Install Frontend Dependencies
+              |
+              v
+         Run Frontend Lint (non-blocking)
+              |
+              v
+         Pipeline Successful [OK]</div>
+        </div>
+
+        <!-- YAML Workflow Explanation -->
+        <div class="card">
+            <h2>YAML Workflow Explanation</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Component</th>
+                        <th>Purpose</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>name</code></td>
+                        <td>Defines the name of the workflow as "Python CI/CD"</td>
+                    </tr>
+                    <tr>
+                        <td><code>on: push</code></td>
+                        <td>Triggers the workflow when code is pushed</td>
+                    </tr>
+                    <tr>
+                        <td><code>branches</code></td>
+                        <td>Runs the workflow for changes pushed to <code>main</code> or <code>feat/ci-cd-pipeline</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>jobs</code></td>
+                        <td>Defines two independent tasks: <code>build-and-test</code> and <code>frontend-lint</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>runs-on</code></td>
+                        <td>Specifies <code>ubuntu-latest</code> as the OS for the workflow runner</td>
+                    </tr>
+                    <tr>
+                        <td><code>actions/checkout</code></td>
+                        <td>Downloads the repository code</td>
+                    </tr>
+                    <tr>
+                        <td><code>actions/setup-python</code></td>
+                        <td>Sets up the Python 3.11 environment</td>
+                    </tr>
+                    <tr>
+                        <td><code>actions/setup-node</code></td>
+                        <td>Sets up the Node.js 18 environment</td>
+                    </tr>
+                    <tr>
+                        <td><code>pip install pytest</code></td>
+                        <td>Installs the pytest testing framework</td>
+                    </tr>
+                    <tr>
+                        <td><code>pytest</code></td>
+                        <td>Executes the test cases</td>
+                    </tr>
+                    <tr>
+                        <td><code>python app.py</code></td>
+                        <td>Runs the Python application</td>
+                    </tr>
+                    <tr>
+                        <td><code>npm install</code></td>
+                        <td>Installs Frontend dependencies</td>
+                    </tr>
+                    <tr>
+                        <td><code>npm run lint</code></td>
+                        <td>Runs ESLint on the Frontend codebase</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Output -->
+        <div class="card">
+            <h2>Output</h2>
+            <ul>
+                <li>The CI/CD pipeline was triggered automatically on push to the feature branch</li>
+                <li><strong>Job 1 (<code>build-and-test</code>):</strong> Python tests passed and application ran successfully <span class="badge">PASS</span></li>
+                <li><strong>Job 2 (<code>frontend-lint</code>):</strong> Frontend lint ran on the existing React codebase (non-blocking) <span class="badge">PASS</span></li>
+                <li>Both jobs completed with green checkmarks (success status)</li>
+                <li>The pipeline demonstrates Continuous Integration &mdash; any future push to the branch will re-trigger the workflow</li>
+            </ul>
+        </div>
+
+        <!-- Conclusion -->
+        <div class="card">
+            <h2>Conclusion</h2>
+            <p>Successfully implemented a basic DevOps CI/CD pipeline using GitHub Actions. The pipeline automatically:</p>
+            <ol>
+                <li>Runs Python pytest tests on the demo application</li>
+                <li>Executes the Python application</li>
+                <li>Lints the existing React Frontend codebase</li>
+            </ol>
+            <p>This demonstrates how GitHub Actions enables automated testing and validation on every code push, ensuring code quality and catching bugs early in the development cycle.</p>
+        </div>
+
+        <!-- References -->
+        <div class="card">
+            <h2>References</h2>
+            <ul>
+                <li>GitHub Actions Documentation: <code>https://docs.github.com/en/actions</code></li>
+                <li>Python CI/CD Playlist: <code>https://www.youtube.com/playlist?list=PLhW3qG5bs-L8HKqfIp6qcAeGb3FAGDNLA</code></li>
+                <li>GitHub Actions Tutorial: <code>https://www.youtube.com/watch?v=ylEy4eLdhFs</code></li>
+            </ul>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>SIES ByteCamp 2026 | Experiment 8 | DevOps CI/CD Pipeline</p>
+        </div>
+    </div>
+</body>
+</html>
